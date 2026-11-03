@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ガントチャートPDF</title>
+<link rel="stylesheet" href="css/style.css">
+<style id="printStyle"></style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <h1>ガントチャートPDF</h1>
+    <div class="buttons">
+      <button type="button" id="btnSettings" aria-haspopup="dialog">基本設定</button>
+      <button type="button" id="btnNew">新規</button>
+      <button type="button" id="btnSave">JSON保存</button>
+      <button type="button" id="btnLoad">JSON読み込み</button>
+      <input type="file" id="fileInput" accept=".json,application/json" hidden>
+      <button type="button" id="btnPdf" class="primary">PDF出力</button>
+    </div>
+    <span class="autosave">入力内容はこのブラウザに自動保存されます</span>
+  </header>
+
+  <div id="notice" class="notice" hidden>
+    <div id="noticeBody"></div>
+    <button type="button" id="noticeClose" aria-label="閉じる">×</button>
+  </div>
+
+  <main class="main" id="main">
+    <section class="preview">
+      <div class="chart-toolbar">
+        <span class="tools">
+          <button type="button" id="btnUndo" class="small" title="元に戻す（Ctrl+Z）" disabled>↶ 元に戻す</button>
+          <button type="button" id="btnRedo" class="small" title="やり直し（Ctrl+Y）" disabled>↷ やり直し</button>
+          <button type="button" id="btnAddGroup" class="small" title="大分類を追加">＋ 大分類</button>
+        </span>
+        <span class="range">
+          <button type="button" id="periodPrev" class="small" title="表示期間の前に7日ぶん足す">◀＋7日</button>
+          <button type="button" id="periodPrev1" class="small" title="表示期間の最初の1日を減らす（開始日が1日後ろへ）">−1日▶</button>
+          <span id="rangeInfo" class="range-info"></span>
+          <button type="button" id="periodNext1" class="small" title="表示期間の最後の1日を減らす（終了日が1日前へ）">◀−1日</button>
+          <button type="button" id="periodNext" class="small" title="表示期間の後ろに7日ぶん足す">＋7日▶</button>
+        </span>
+        <span class="zoom">
+          <select id="paperQuick" class="small paper-quick" aria-label="用紙サイズ（PDFも同じ）" title="用紙サイズ（A4・A3。PDFも同じ大きさ）">
+            <option value="A4">A4 横</option>
+            <option value="A3">A3 横</option>
+          </select>
+          <button type="button" id="zoomOut" class="small" aria-label="縮小">−</button>
+          <span id="zoomLabel" title="100% = 用紙全体が画面に収まる大きさ">100%</span>
+          <button type="button" id="zoomIn" class="small" aria-label="拡大">＋</button>
+        </span>
+      </div>
+      <p class="chart-hint">マス・タスク・日付・行事予定・大分類の名前をタップすると、それに合わせた編集画面が開きます。右の列をタップすると、稼働日数の表示を切り替えます。</p>
+      <div id="warnings" class="warnings" hidden></div>
+      <div id="chartHost" class="chart-host"></div>
+    </section>
+  </main>
+
+  <!-- チャートの上でタップしたものの編集画面。中身は editor.js が、タップしたものに合わせて作る -->
+  <dialog id="editDialog" class="dialog edit-dialog" aria-label="編集">
+    <div class="dialog-body"></div>
+  </dialog>
+
+  <dialog id="settingsDialog" class="dialog" aria-labelledby="settingsTitle">
+    <div class="dialog-body">
+      <h2 id="settingsTitle">基本設定</h2>
+      <label class="field">プロジェクト名
+        <input type="text" id="projectName">
+      </label>
+      <div class="field">表示期間の開始日
+        <div class="inline">
+          <label class="check"><input type="checkbox" id="periodSpecify"> 指定する</label>
+          <input type="date" id="periodStart" min="1980-01-01" max="2099-12-31" disabled>
+        </div>
+      </div>
+      <div class="field">表示期間の終了日
+        <div class="inline">
+          <label class="check"><input type="checkbox" id="periodEndSpecify"> 指定する</label>
+          <input type="date" id="periodEnd" min="1980-01-01" max="2099-12-31" disabled>
+        </div>
+        <small>指定しないときは、予定の最初の日から最後の日までを表示します（1980〜2099年、最大366日）。</small>
+        <small id="periodError" class="field-error" role="alert" hidden></small>
+      </div>
+      <label class="field">用紙サイズ（PDFは横向き）
+        <select id="paper">
+          <option value="A4">A4 横</option>
+          <option value="A3">A3 横</option>
+        </select>
+      </label>
+      <label class="field">右上の自由記入欄
+        <textarea id="freeText" rows="3"></textarea>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" id="settingsClose" class="primary" autofocus>完了</button>
+      </div>
+    </div>
+  </dialog>
+</div>
+
+<!-- PDF 出力（印刷）のときだけ表示する、用紙に合わせたチャート -->
+<div id="printHost" class="print-host" aria-hidden="true"></div>
+
+<script src="js/dateutil.js"></script>
+<script src="js/holidays.js"></script>
+<script src="js/calendar.js"></script>
+<script src="js/model.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/edits.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

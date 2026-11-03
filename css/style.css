@@ -1,0 +1,405 @@
+/* 画面用と印刷用のスタイル。
+   画面は、チャートだけ（入力タブはない）。タップしたものの編集画面（ダイアログ）が開く。マウスもタッチも同じ。 */
+:root {
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --line: #d0d4da;
+  --text: #1f2933;
+  --sub: #5f6b7a;
+  --accent: #1f6feb;
+  --accent-bg: #e8f0fe;
+  --danger: #c62828;
+  --warn-bg: #fff4e5;
+  --warn-line: #f0b429;
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: 'Yu Gothic UI', 'Meiryo', 'Hiragino Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.topbar .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.autosave {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+button {
+  font: inherit;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+  touch-action: manipulation; /* ダブルタップで拡大されない */
+}
+
+button:hover { background: #f0f2f5; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary:hover { background: #1a5fcb; }
+button.small { padding: 1px 7px; font-size: 12px; }
+button.danger { color: var(--danger); }
+button:disabled { opacity: 0.4; cursor: default; }
+
+/* メッセージは画面の下に重ねて出す（上に出すと、チャートの上端が動いて、画面に収まる高さがずれるため） */
+.notice {
+  position: fixed;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: min(760px, calc(100vw - 24px));
+  max-height: 40vh;
+  overflow: auto;
+  padding: 8px 16px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.notice.error { background: #fdecea; border-color: #e57373; }
+.notice.ok { background: #e8f5e9; border-color: #81c784; }
+.notice ul { margin: 4px 0 0; padding-left: 20px; }
+.notice button { border: 0; background: transparent; font-size: 18px; line-height: 1; }
+
+/* ダイアログ（基本設定と、タップしたものの編集画面） */
+.dialog {
+  width: min(480px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+  overflow: auto;
+}
+
+.dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+.dialog-body { padding: 16px; }
+.dialog h2 { margin: 0 0 10px; font-size: 16px; }
+.dialog-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+.field-error { color: var(--danger); }
+
+.field {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+.field input[type="text"],
+.field input[type="date"],
+.field input[type="number"],
+.field select,
+.field textarea {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  padding: 5px 7px;
+  font: inherit;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+.field small { display: block; margin-top: 2px; }
+.inline { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.inline input[type="date"] { margin-top: 0; }
+.check { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+
+/* 編集画面（タップしたものに合わせて、中身が変わる）。広い画面は右側に、狭い画面は下から出る。後ろのチャートが見える */
+.edit-dialog {
+  width: min(420px, calc(100vw - 24px));
+  margin: 12px 12px 12px auto;
+}
+
+.edit-dialog::backdrop { background: rgba(0, 0, 0, 0.18); }
+.dlg-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.dlg-sub { font-size: 12px; color: var(--sub); }
+.eb-badge { padding: 2px 10px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 12px; white-space: nowrap; }
+.dlg-two { display: flex; gap: 8px; }
+.dlg-two > .field { flex: 1; min-width: 0; }
+.dlg-section { margin: 4px 0 10px; }
+.dlg-info { margin-bottom: 6px; font-size: 13px; }
+.dlg-note { margin-top: 4px; font-size: 11px; color: var(--sub); }
+.dlg-label { margin: 8px 0 3px; font-size: 12px; color: var(--sub); }
+.dlg-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.dlg-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 14px; }
+.dlg-foot-left, .dlg-foot-right { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.dlg-error { margin: 0 0 8px; padding: 6px 8px; background: #fdecea; border: 1px solid #e57373; border-radius: 4px; font-size: 12px; }
+
+/* タスクの期間の、日ごとの稼働日・非稼働日の選択（カレンダーの形）。選ばれている日 = 稼働日 */
+.dlg-days { margin: 4px 0 10px; }
+.dlg-days-head, .dlg-days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.dlg-days-head span { text-align: center; font-size: 11px; color: var(--sub); }
+.dlg-days-head .red { color: #c0392b; }
+.dlg-days-head .blue { color: #1565c0; }
+.dlg-day { min-width: 0; padding: 6px 0; font-size: 12px; text-align: center; }
+.dlg-day[aria-pressed="true"] { background: var(--accent-bg); border-color: var(--accent); color: var(--text); font-weight: bold; }
+.dlg-day.red[aria-pressed="true"] { color: #c0392b; }
+.dlg-day.blue[aria-pressed="true"] { color: #1565c0; }
+.dlg-day[aria-pressed="false"] { background: #eee; border-color: #ccc; color: #999; text-decoration: line-through; }
+
+.dlg-palette { margin-bottom: 6px; }
+
+/* 最近使った色（色の選択の一番上） */
+.palette-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 2px; padding: 3px 6px; background: var(--accent-bg); border-radius: 4px; }
+.palette-recent[hidden] { display: none; }
+.palette-recent .palette { margin-top: 0; }
+.palette-recent-label { font-size: 11px; color: var(--sub); white-space: nowrap; }
+
+/* 稼働日数の入力（数・単位・手動で入力する） */
+.dlg-workdays[hidden] { display: none; }
+.dlg-days-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }
+.dlg-days-num { width: 80px; }
+.dlg-days-unit { width: 72px; }
+
+.dlg-weekdays { display: flex; gap: 6px; margin-bottom: 8px; }
+.dlg-wd { flex: 1; padding: 8px 0; min-width: 0; text-align: center; }
+.dlg-wd.red { color: #c0392b; }
+.dlg-wd.blue { color: #1565c0; }
+.dlg-wd[aria-pressed="true"] { background: #d9d9d9; border-color: #555; font-weight: bold; }
+
+/* カラーパレット */
+.palette {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.palette .swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #888;
+  border-radius: 3px;
+}
+
+.palette .swatch.none {
+  background: linear-gradient(135deg, #fff 45%, #d32f2f 45%, #d32f2f 55%, #fff 55%);
+}
+
+.palette .swatch[aria-pressed="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.palette .other {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+.palette .other.selected { color: var(--accent); font-weight: bold; }
+.palette .other input { width: 28px; height: 26px; padding: 0; border: 1px solid #888; }
+
+.main {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* チャート（画面表示） */
+.preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px;
+}
+
+.chart-toolbar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.range-info { color: var(--sub); }
+.zoom { display: flex; align-items: center; gap: 6px; }
+.paper-quick { margin-right: 6px; padding: 1px 4px; font: inherit; font-size: 12px; color: var(--text); border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+.zoom button { min-width: 32px; }
+.chart-toolbar .tools,
+.chart-toolbar .range { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+
+.chart-hint {
+  flex: none;
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
+/* チャートの上に重ねる層（選んだものの枠・その場の文字入力） */
+.chart-stage {
+  position: relative;
+  margin: 0 auto; /* 画面が用紙より広いときは中央に置く（拡大して大きいときは左から） */
+  background: #fff; /* 用紙。画面の形が用紙と違うので、用紙より外は灰色になる */
+  box-shadow: 0 0 0 1px var(--line), 0 1px 4px rgba(0, 0, 0, 0.15);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: pan-x pan-y pinch-zoom; /* スクロールと拡大はできる。ダブルタップでの拡大はしない */
+}
+
+.hl-layer { position: absolute; left: 0; top: 0; pointer-events: none; }
+
+.inline-edit {
+  position: absolute;
+  z-index: 10;
+  box-sizing: border-box;
+  padding: 2px 6px;
+  font-family: inherit;
+  line-height: 1.35;
+  color: #000;
+  background: #fff;
+  border: 2px solid var(--accent);
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  resize: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.warnings {
+  flex: none;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.warnings ul { margin: 0; padding-left: 20px; }
+
+.chart-host {
+  flex: 0 1 auto; /* 行が少ないときは、チャートの高さ（中身）で止める。多いときは、画面に収めてスクロール */
+  min-height: 0;
+  overflow: auto;
+  padding: 3px; /* 用紙（.chart-stage）の影が切れないように */
+  -webkit-overflow-scrolling: touch;
+}
+
+.chart-host svg {
+  display: block;
+  height: auto;
+}
+
+.print-host { display: none; }
+
+.dragging .preview { outline: 3px dashed var(--accent); outline-offset: -8px; }
+
+/* 指で操作する画面（iPad・スマホ）: 押しやすい大きさにして、入力時に iOS で拡大されないようにする */
+@media (pointer: coarse) {
+  button { min-height: 40px; padding: 6px 14px; }
+  button.small { min-height: 36px; min-width: 40px; padding: 4px 8px; font-size: 14px; }
+  .paper-quick { min-height: 36px; font-size: 14px; }
+  .palette .swatch { width: 34px; height: 34px; min-height: 0; min-width: 0; }
+  .dlg-days-num, .dlg-days-unit { min-height: 40px; font-size: 16px; }
+  .palette .other input { width: 42px; height: 34px; min-height: 0; }
+  .field { font-size: 13px; }
+  .field input[type="text"],
+  .field input[type="date"],
+  .field input[type="number"],
+  .field select,
+  .field textarea {
+    min-height: 40px;
+    padding: 8px;
+    font-size: 16px;
+  }
+  .check { min-height: 40px; }
+  .check input { width: 22px; height: 22px; }
+  .dlg-wd { padding: 12px 0; }
+  .dlg-day { min-height: 40px; }
+  .inline-edit { font-size: 16px; }
+}
+
+/* 狭い画面（iPad 縦・スマホ）: ページ全体を縦にスクロールできる。編集画面は下から出る */
+@media (max-width: 1023px) {
+  .app {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .topbar { padding: 8px 12px; }
+  .topbar h1 { font-size: 16px; }
+  .autosave { display: none; }
+
+  .main { display: block; }
+  .preview { display: block; padding: 8px; }
+  .chart-host { overflow-x: auto; overflow-y: visible; }
+
+  .edit-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    margin: auto 0 0;
+    border-radius: 12px 12px 0 0;
+    max-height: 88dvh;
+  }
+}
+
+/* 印刷（PDF 出力）: 用紙に合わせたチャートだけを出す。@page の用紙サイズ・余白と、#printHost・SVG の大きさは app.js が差し込む。 */
+@media print {
+  html, body { height: auto; margin: 0; background: #fff; }
+  .app { display: none !important; }
+  .print-host { display: block; }
+  .print-host svg { display: block; }
+}
